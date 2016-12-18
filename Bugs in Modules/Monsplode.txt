@@ -10,3 +10,5 @@ because sometimes the defuser doesn't give the actions out in order.
 
 *** I'm starting to think that Candle's damage is really 2 and not 3.
 
+- vs Mebor move Hollow Gaze, was 4 but shouldn't be 2 ?
+
