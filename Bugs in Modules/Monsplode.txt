@@ -2,17 +2,13 @@
 Button number alone isn't really enough to do a good post-mortem
 because sometimes the defuser doesn't give the actions out in order.
 
+Fixed:
+- Candle is now 2 in the manaul
+
+Confirmed:
 - vs. Zenlad move Sendify, was 2 but shouldn't it be 10 ?
-
-- vs. Flaurim move Candle, was 1 but shouldn't it be 1.5 ?
-
-- vs. Vallarim move Candle, was 1 but shouldn't it be 1.5 ?
-
-*** I'm starting to think that Candle's damage is really 2 and not 3.
-
 - vs Mebor move Hollow Gaze, was 4 but shouldn't it be 2 ?
-
 - vs Gloorim move Appearify, was 4 but shouldn't it be 10 ?
 
+Not sure about:
 - vs Nibs move Spectre, was 7 but shouldn't it be 0 ?
-
