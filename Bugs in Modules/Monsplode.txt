@@ -6,9 +6,13 @@ because sometimes the defuser doesn't give the actions out in order.
 
 - vs. Flaurim move Candle, was 1 but shouldn't it be 1.5 ?
 
-- vs. Vallarim move Candle, was 1 but shouldn't be 1.5 ?
+- vs. Vallarim move Candle, was 1 but shouldn't it be 1.5 ?
 
 *** I'm starting to think that Candle's damage is really 2 and not 3.
 
-- vs Mebor move Hollow Gaze, was 4 but shouldn't be 2 ?
+- vs Mebor move Hollow Gaze, was 4 but shouldn't it be 2 ?
+
+- vs Gloorim move Appearify, was 4 but shouldn't it be 10 ?
+
+- vs Nibs move Spectre, was 7 but shouldn't it be 0 ?
 
