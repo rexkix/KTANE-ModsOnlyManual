@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html class="no-js"><head>
+		<title>Chess - Keep Talking and Nobody Explodes Mod</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="Chess%20cheat%20sheet%20%28Interactive%29%20%28Samfun123%29_files/normalize.css">
+		<link rel="stylesheet" type="text/css" href="Chess%20cheat%20sheet%20%28Interactive%29%20%28Samfun123%29_files/main.css">
+		<link href="Chess%20cheat%20sheet%20%28Interactive%29%20%28Samfun123%29_files/css.css" rel="stylesheet" type="text/css">
+		<script src="Chess%20cheat%20sheet%20%28Interactive%29%20%28Samfun123%29_files/jquery-3.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+		<script type="text/javascript">
+			$(function() {
+				var pieces = ["♔", "♕", "♖", "♗", "♘"] //"♙"
+				var selected = ""
+
+				var chessboard = $(".chess-board")
+				for (var y = 0; y < 6; y++) {
+					var row = $("<div>").addClass("chess-row").appendTo(chessboard)
+					$("<div>").addClass("square").text(6 - y).appendTo(row)
+					for (var x = 0; x < 6; x++) {
+						$("<div>").addClass("square " + ((y + x) % 2 == 0 ? "white" : "black")).appendTo(row).each(function(_, e) {
+							var element = $(e)
+							element.click(function(event) {
+								element.toggleClass("occupied")
+
+								event.preventDefault()
+							})
+
+							element.contextmenu(function(event) {
+								element.text(element.text() == "" ? selected : "")
+								event.preventDefault()
+							})
+
+							if (x === 0) {
+								element.css("border-left-width", "2px")
+							}
+							if (y === 0) {
+								element.css("border-top-width", "2px")
+								element.parent().css("height", "62px")
+							}
+							if (x === 5) {
+								element.css("border-right-width", "2px")
+							}
+							if (y === 5) {
+								element.css("border-bottom-width", "2px")
+								element.parent().css("height", "62px")
+							}
+						})
+					}
+				}
+
+				var row = $("<div>").addClass("chess-row").appendTo(chessboard).css("margin-left", "60px")
+				for (var i = 0; i < 6; i++) {
+					$("<div>").addClass("square").text(String.fromCharCode(97 + i)).appendTo(row)
+				}
+
+				var chesspieces = $(".chess-pieces")
+				pieces.forEach(function(val, index) {
+					var piece = $("<div>").addClass("piece square").appendTo(chesspieces).click(function() {
+						$(".piece").removeClass("selected")
+						$(this).addClass("selected")
+						selected = val
+					}).text(val)
+
+					if (index == 0) {
+						piece.click()
+					}
+				})
+
+				$(".reset").click(function() {
+					$(".black.square, .white.square").text("").removeClass("occupied")
+				})
+			})
+		</script>
+		<style>
+			.chess-board {
+				width: 424px;
+			}
+
+			.chess-row, .chess-pieces {
+				height: 60px;
+			}
+
+			.chess-pieces {
+				margin-top: 10px;
+			}
+
+			.square {
+				width: 60px;
+				height: 60px;
+				float: left;
+				font-size: 60px;
+				user-select: none;
+				text-align: center;
+				border: black 0px solid;
+			}
+
+			.white {
+				background-color: white;
+				color: black;
+				transition: 0.3s;
+			}
+
+			.black {
+				background-color: black;
+				color: white;
+				transition: 0.3s;
+			}
+
+			.white.occupied {
+				background-color: rgba(255, 105, 105, 1);
+				border-color: rgba(150, 0, 0, 1);
+			}
+
+			.black.occupied {
+				background-color: rgba(150, 0, 0, 1);
+				border-color: rgba(150, 0, 0, 1);
+			}
+
+			.piece {
+				margin: 2px;
+				cursor: pointer;
+			}
+
+			.piece.selected {
+				margin: 0px;
+				border: black 2px dashed;
+			}
+
+			button { 
+				font-family: Special Elite;
+				background-color: white;
+				color: black;
+				padding: 10px 20px;
+				border-radius: 5px;
+				border: black 3px solid;
+				transition: 0.3s;
+			}
+
+			button:hover {
+				background-color: black;
+				color: white;
+			}
+
+			table.chess h4 {
+				margin: 0;
+			}
+			table.chess p {
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="section">
+			<div class="page page-bg-01">
+				<div class="page-header">
+					<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+					<span class="page-header-section-title">Chess</span>
+				</div>
+				<div class="page-content">
+					<img src="Chess%20cheat%20sheet%20%28Interactive%29%20%28Samfun123%29_files/Chess.svg" class="diagram">
+					<h2>On the Subject of the Chess Board</h2>
+					<p class="flavour-text">Under pressure, chess can feel more like a game of battleships. But, atleast you have this chess board handy.</p>
+					<p>This manual is a interactive <b>6x6 chessboard</b>.
+					</p><p>Please see the normal manual for extra information.
+					</p><p>Use this table as reference to determine the correct figure for each position:</p>
+					<table class="chess">
+						<tbody><tr>
+							<td>
+								<h4>Position #1: Monarchy vs Theocracy</h4>
+								<p>Occupied by a king if Position #5 is occupied by a queen.
+								</p><p>Otherwise, the field is occupied by a bishop.
+							</p></td>
+						</tr>
+						<tr>
+							<td>
+								<h4>Position #2: Commander of the Army</h4>
+								<p>Occupied by a rook if the last digit of the serial number is odd.
+								</p><p>Otherwise, the field is occupied by a knight.
+							</p></td>
+						</tr>
+						<tr>
+							<td>
+								<h4>Position #3: A Matter of Regents</h4>
+								<p>Occupied by a queen if there are less than two rooks on the board.
+								</p><p>Otherwise, the field is occupied by a king.
+							</p></td>
+						</tr>
+						<tr>
+							<td>
+								<h4>Position #4: The Iron Tower</h4>
+								<p>Always occupied by a rook.
+							</p></td>
+						</tr>
+						<tr>
+							<td>
+								<h4>Position #5: Conflict between Good and Evil</h4>
+								<p>Occupied by a queen if the field is white.
+								</p><p>Otherwise, the field is occupied by a rook.
+							</p></td>
+						</tr>
+						<tr>
+							<td>
+								<h4>Position #6: The Scepter, the Sword and the Crosier</h4>
+								<p>Occupied by a queen if there are no other queens on the board.
+								</p><p>Otherwise, occupied by a knight if there are no other knights on the board.
+								</p><p>Otherwise, the field is occupied by a bishop.
+							</p></td>
+						</tr>
+					</tbody></table>
+					<h3>Chess Board</h3>
+					<p>Use the following interactive graphic as a chess board.
+					</p><p>Click to mark a tile and right click to place/remove a piece from a tile.
+					<br>
+					Select which piece you wish to place down by selecting it from the icons below.
+					<br>
+					You can also reset the board using the button below the board.
+					</p><div class="chess-board"><div class="chess-row" style="height: 62px;"><div class="square">6</div><div class="square white" style="border-left-width: 2px; border-top-width: 2px;"></div><div class="square black" style="border-top-width: 2px;"></div><div class="square white" style="border-top-width: 2px;"></div><div class="square black" style="border-top-width: 2px;"></div><div class="square white" style="border-top-width: 2px;"></div><div class="square black" style="border-top-width: 2px; border-right-width: 2px;"></div></div><div class="chess-row"><div class="square">5</div><div class="square black" style="border-left-width: 2px;"></div><div class="square white"></div><div class="square black"></div><div class="square white"></div><div class="square black"></div><div class="square white" style="border-right-width: 2px;"></div></div><div class="chess-row"><div class="square">4</div><div class="square white" style="border-left-width: 2px;"></div><div class="square black"></div><div class="square white"></div><div class="square black"></div><div class="square white"></div><div class="square black" style="border-right-width: 2px;"></div></div><div class="chess-row"><div class="square">3</div><div class="square black" style="border-left-width: 2px;"></div><div class="square white"></div><div class="square black"></div><div class="square white"></div><div class="square black"></div><div class="square white" style="border-right-width: 2px;"></div></div><div class="chess-row"><div class="square">2</div><div class="square white" style="border-left-width: 2px;"></div><div class="square black"></div><div class="square white"></div><div class="square black"></div><div class="square white"></div><div class="square black" style="border-right-width: 2px;"></div></div><div class="chess-row" style="height: 62px;"><div class="square">1</div><div class="square black" style="border-left-width: 2px; border-bottom-width: 2px;"></div><div class="square white" style="border-bottom-width: 2px;"></div><div class="square black" style="border-bottom-width: 2px;"></div><div class="square white" style="border-bottom-width: 2px;"></div><div class="square black" style="border-bottom-width: 2px;"></div><div class="square white" style="border-right-width: 2px; border-bottom-width: 2px;"></div></div><div class="chess-row" style="margin-left: 60px;"><div class="square">a</div><div class="square">b</div><div class="square">c</div><div class="square">d</div><div class="square">e</div><div class="square">f</div></div></div>
+					<div class="chess-pieces"><div class="piece square">♔</div><div class="piece square">♕</div><div class="piece square">♖</div><div class="piece square">♗</div><div class="piece square selected">♘</div></div>
+					<br>
+					<p><button class="reset">Reset Board</button>
+				</p></div>
+				<div class="page-footer relative-footer">Page 1 of 1</div>
+			</div>
+		</div>
+	
+</body></html>
