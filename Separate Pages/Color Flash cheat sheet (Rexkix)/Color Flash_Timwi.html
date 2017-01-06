@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html class="no-js"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Color Flash — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link href="Color%20Flash_Timwi_files/css.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" type="text/css" href="Color%20Flash_Timwi_files/normalize.css">
+    <link rel="stylesheet" type="text/css" href="Color%20Flash_Timwi_files/main.css">
+    <style>
+        .highlight {
+            padding: 0 .2em;
+            border-radius: 2mm;
+        }
+        .highlight.green    { background-color: #8f8; }
+        .highlight.blue     { background-color: #acf; }
+        .highlight.magenta  { background-color: #f6f; }
+        .highlight.white    { background-color: #eee; }
+        .highlight.red      { background-color: #f88; }
+        .highlight.yellow   { background-color: #ff8; }
+        .highlight.yesno {
+            border: .1mm solid black;
+        }
+        .highlight.wordcolor {
+            background-color: #ccc;
+        }
+    </style>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+			<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+			<span class="page-header-section-title">Color Flash</span>
+		</div>
+        <div class="page-content">
+    	    <img src="Color%20Flash_Timwi_files/Color%2520Flash.svg" class="diagram">
+            <h2>On the Subject of Color Flash</h2>
+            <p class="flavour-text">
+                It’s easy to identify colors. Red, Blue, Green, etc. 
+Turns out it’s a bit harder when you display a word color in a different
+ color though...
+			</p>
+
+			<ul>
+                <li>A color flash module will repeatedly flash a sequence of 8 different words representing colors in different colors.</li>
+                <li>The possible colors are Red, Yellow, Green, Blue, Magenta and White.</li>
+                <li>There is also a Yes button and a No button on the module.</li>
+                <li>Only <em>one</em> of the Yes and No buttons need to 
+be pressed to disarm the module, but must be pressed at the correct time
+ according to the rules below.</li>
+                <li>The color of the last word in the sequence determines which set of rules to follow below.</li>
+                <li>Follow the rules down from the top-most rule, down to the bottom-most rule for the block that applies to your module.</li>
+            </ul>
+
+            <table>
+                <tbody><tr>
+                     <td>
+                         <strong><em>The color of the last word is <span class="highlight red">Red</span>:</em></strong> <br>
+                         If <span class="highlight green">Green</span> is the <span class="highlight wordcolor">word</span> at least three times, press <span class="highlight yesno">Yes</span> on the third time <span class="highlight green">Green</span> is either the <span class="highlight wordcolor">word</span> or the <span class="highlight wordcolor">color</span>.<br>
+                         Otherwise, if <span class="highlight blue">Blue</span> is the <span class="highlight wordcolor">color</span> exactly once, press <span class="highlight yesno">No</span> when the <span class="highlight wordcolor">word</span> <span class="highlight magenta">Magenta</span> is shown.<br>
+                         Otherwise, press <span class="highlight yesno">Yes</span> the last time <span class="highlight white">White</span> is either the <span class="highlight wordcolor">word</span> or the <span class="highlight wordcolor">color</span>.
+                     </td>
+                 </tr>
+                 <tr>
+                     <td>
+                         <strong><em>The color of the last word is <span class="highlight yellow">Yellow</span>:</em></strong> <br>
+                         If the <span class="highlight wordcolor">word</span> <span class="highlight blue">Blue</span> is shown in <span class="highlight green">Green</span> <span class="highlight wordcolor">color</span>, press <span class="highlight yesno">Yes</span> on the first time <span class="highlight green">Green</span> is the <span class="highlight wordcolor">color</span>.<br>
+                         Otherwise, if the <span class="highlight wordcolor">word</span> <span class="highlight white">White</span> is shown in either <span class="highlight white">White</span> or <span class="highlight red">Red</span> <span class="highlight wordcolor">color</span>, press <span class="highlight yesno">Yes</span> on the second time where the <span class="highlight wordcolor">color</span> does not match the <span class="highlight wordcolor">word</span>.<br>
+                         Otherwise, count the number of times <span class="highlight magenta">Magenta</span> is either the <span class="highlight wordcolor">word</span> or the <span class="highlight wordcolor">color</span>, and press <span class="highlight yesno">No</span> on the entry in the total’s position (e.g. a total of 4 means the fourth entry).
+                     </td>
+                 </tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and <span class="highlight yesno">No</span>body Explodes Mod</span>
+            <span class="page-header-section-title">Color Flash</span>
+        </div>
+        <div class="page-content">
+            <p>Continuation of previous table...
+
+            </p><table>
+                <tbody><tr>
+                    <td>
+                         <strong><em>The color of the last word is <span class="highlight green">Green</span>:</em></strong> <br>
+                         If a <span class="highlight wordcolor">word</span> occurs consecutively with different <span class="highlight wordcolor">colors</span>, press <span class="highlight yesno">No</span> on the fifth entry.<br>
+                         If <span class="highlight magenta">Magenta</span> is the <span class="highlight wordcolor">word</span> as least three times, press <span class="highlight yesno">No</span> on the first time <span class="highlight yellow">Yellow</span> is either the <span class="highlight wordcolor">word</span> or the <span class="highlight wordcolor">color</span>.<br>
+                         Otherwise, press <span class="highlight yesno">Yes</span> when the <span class="highlight wordcolor">color</span> matches the <span class="highlight wordcolor">word</span>.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong><em>The color of the last word is <span class="highlight blue">Blue</span>:</em></strong> <br>
+                        If the <span class="highlight wordcolor">color</span> does not match the <span class="highlight wordcolor">word</span> three times or more, press <span class="highlight yesno">Yes</span> on the first time where the <span class="highlight wordcolor">color</span> does not match the <span class="highlight wordcolor">word</span>.<br>
+                        If the <span class="highlight wordcolor">word</span> <span class="highlight red">Red</span> is shown in <span class="highlight yellow">Yellow</span> <span class="highlight wordcolor">color</span>, or the <span class="highlight wordcolor">word</span> <span class="highlight yellow">Yellow</span> is shown in <span class="highlight white">White</span> <span class="highlight wordcolor">color</span>, press <span class="highlight yesno">No</span> when the <span class="highlight wordcolor">word</span> <span class="highlight white">White</span> is shown in <span class="highlight red">Red</span> <span class="highlight wordcolor">color</span>.<br>
+                        Otherwise, press <span class="highlight yesno">Yes</span> the last time <span class="highlight green">Green</span> is either the <span class="highlight wordcolor">word</span> or the <span class="highlight wordcolor">color</span>.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong><em>The color of the last word is <span class="highlight magenta">Magenta</span>:</em></strong> <br>
+                        If a <span class="highlight wordcolor">color</span> occurs consecutively with different <span class="highlight wordcolor">words</span>, press <span class="highlight yesno">Yes</span> on the third entry.<br>
+                        If the number of times the <span class="highlight wordcolor">word</span> <span class="highlight yellow">Yellow</span> appears is greater than the number of times that the <span class="highlight wordcolor">color</span> is <span class="highlight blue">Blue</span>, press <span class="highlight yesno">No</span> the last time the <span class="highlight wordcolor">word</span> is <span class="highlight yellow">Yellow</span>.<br>
+                        Otherwise, press <span class="highlight yesno">No</span> on the first time where the <span class="highlight wordcolor">color</span> matches the <span class="highlight wordcolor">word</span> of the seventh entry.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong><em>The color of the last word is <span class="highlight white">White</span>:</em></strong> <br>
+                        If the <span class="highlight wordcolor">color</span> of the third entry matches the fourth or fifth <span class="highlight wordcolor">word</span>, press <span class="highlight yesno">No</span> the first time that <span class="highlight blue">Blue</span> is the <span class="highlight wordcolor">word</span> or the <span class="highlight wordcolor">color</span>.<br>
+                        If the <span class="highlight wordcolor">word</span> <span class="highlight yellow">Yellow</span> is shown in <span class="highlight red">Red</span> <span class="highlight wordcolor">color</span>, press <span class="highlight yesno">Yes</span> on the last time <span class="highlight blue">Blue</span> is the <span class="highlight wordcolor">color</span>.<br>
+                        Otherwise, press <span class="highlight yesno">No</span>.
+                    </td>
+                </tr>
+            </tbody></table>
+        </div>
+    </div>
+</div>
+
+
+</body></html>
