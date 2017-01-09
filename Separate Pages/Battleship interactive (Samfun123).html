@@ -11,6 +11,14 @@
 		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 		<script type="text/javascript">
 			$(function() {
+				var controls = localStorage.getItem("alt-controls")
+				if (controls == null) {
+					localStorage.setItem("alt-controls", false)
+					controls = false
+				} else {
+					$(".alt-controls").prop("checked", controls == "true")
+				}
+
 				var grid = $(".grid")
 				var ships = $(".ships")
 				var cells = []
@@ -20,6 +28,7 @@
 				var order = []
 				var currentState
 				var animTime
+				var dragState
 
 				function mod(x, m) {
 					return (x % m + m) % m
@@ -31,19 +40,6 @@
 
 				function getCell(x, y) {
 					return cells[y] ? cells[y][x] : undefined
-				}
-
-				function getCellFromElement(element) {
-					var cell
-					cells.forEach(function(row) {
-						row.forEach(function(c) {
-							if (c.element.is(element)) {
-								cell = c
-							}
-						})
-					})
-
-					return cell
 				}
 
 				function getShip(cell) {
@@ -143,17 +139,6 @@
 					}
 				}
 
-				function getOrderIndex(element) {
-					var index = -1
-					order.forEach(function(e, i) {
-						if (e.is(element)) {
-							index = i
-						}
-					})
-
-					return index
-				}
-
 				function massChange(changes) {
 					changes.forEach(function(change) {
 						if (change.cell) {
@@ -169,7 +154,13 @@
 				$(document).keydown(function(event) {
 					var n = parseInt(event.key)
 					var selected = $(".cell.selected")
-					var index = getOrderIndex(selected)
+					var index = -1
+					order.forEach(function(e, i) {
+						if (e.is(selected)) {
+							index = i
+						}
+					})
+
 					if (event.key == "`") {
 						n = 0
 					}
@@ -183,11 +174,16 @@
 							selected.text(n)
 							deselectCell(selected)
 
-							if (!getCellFromElement(selected)) {
+							if (selected.parent().parent().hasClass("ships")) {
+								if (n > 3) {
+									n = 3
+								}
+
+								selected.text(n)
 								var row = selected.parent()
 								row.children().filter("input").remove()
 								for (var i = 1; i <= n; i++) {
-									$("<input type=\"checkbox\">").appendTo(row).click(function() {
+									$("<input type=\"checkbox\">").addClass("tracker").appendTo(row).click(function() {
 										var element = $(this)
 										undos.push([{element: element, state: !element.prop("checked")}])
 
@@ -209,6 +205,7 @@
 							order[mod(index + 1, order.length)].click()
 						} else if (event.key == "Backspace") {
 							order[mod(index - 1, order.length)].click()
+							event.preventDefault()
 						} else if (event.key == " ") {
 							order[mod(index + 1, order.length)].click()
 							event.preventDefault()
@@ -268,10 +265,31 @@
 						if (x > 0 && y > 0) {
 							element.addClass("placable")
 							function clickElement(event) {
-								if (event.buttons == 1) {
+								var button = event.buttons
+								if (button == 1 || (button == 2 && controls)) {
 									undos.push([{cell: cell, state: cell.state}])
-									cell.state++
-									cell.state %= 3
+									if (!controls) {
+										cell.state++
+										cell.state %= 3
+									} else if (button == 1) {
+										if (cell.state == 0) {
+											cell.state = 1
+										} else {
+											cell.state = 0
+										}
+									} else {
+										if (cell.state == 0) {
+											cell.state = 2
+										} else {
+											cell.state = 0
+										}
+									}
+
+									if (event.type == "mousedown") {
+										dragState = cell.state
+									} else if (event.type == "mouseenter") {
+										cell.state = dragState
+									}
 
 									redos = []
 									if (currentState) {
@@ -290,7 +308,11 @@
 								}
 							}
 
-							element.mousedown(clickElement).mouseenter(clickElement)
+							element.mousedown(clickElement).mouseenter(clickElement).contextmenu(function(event) {
+									if (controls) {
+										event.preventDefault()
+									}
+								})
 
 							cells[y][x] = cell
 						} else if (x != 0 || y != 0) {
@@ -366,7 +388,7 @@
 					}
 				})
 
-				$("button.reset").click(function() {
+				function resetGrid() {
 					var undo = []
 					cells.forEach(function(row, y) {
 						row.forEach(function(cell, x) {
@@ -380,7 +402,21 @@
 						})
 					})
 
+					$(".ships input.tracker").each(function(_, element) {
+						var element = $(element)
+						undo.push({
+							element: element, state: element.prop("checked")
+						})
+						element.prop("checked", false)
+					})
+
 					undos.push(undo)
+				}
+
+				$("button.reset-grid").click(resetGrid)
+
+				$("button.reset").click(function() {
+					resetGrid()
 
 					saves = []
 					$(".save-states button").remove()
@@ -389,7 +425,12 @@
 						element.text("?")
 					})
 
-					$("input").remove()
+					$("input.tracker").remove()
+				})
+
+				$("input.alt-controls").click(function() {
+					controls = $(this).prop("checked")
+					localStorage.setItem("alt-controls", controls.toString())
 				})
 
 				for (var i = 4; i >= 1; i--) {
@@ -398,7 +439,7 @@
 					for (var x = 1; x <= i; x++) {
 						var ship = $("<div>").addClass("ship").appendTo(row)
 						if (x == 1) {
-							ship.addClass("right top bottom").css("margin-right", (4 - i) * 30)
+							ship.addClass("right top bottom").css("margin-right", (4 - i) * 35)
 						}
 
 						if (x == i) {
@@ -485,8 +526,8 @@
 			.ship {
 				border: black 3px solid;
 				background-color: white;
-				height: 40px;
-				width: 40px;
+				height: 45px;
+				width: 45px;
 				align-self: center;
 			}
 
@@ -534,10 +575,10 @@
 			.ships .ship, .ships .cell, .ships input {
 				float: right;
 				margin-right: 5px;
-				width: 20px;
-				height: 20px;
+				width: 25px;
+				height: 25px;
 				margin-top: 16px;
-				line-height: 30px; 
+				line-height: 35px; 
 			}
 
 			.ships input {
@@ -575,16 +616,37 @@
 					<h2>On the Subject of Battling Battleships</h2>
 					<p class="flavour-text">FIRE! ... (splash) Missed.
 
-					<p><strong>Attention, Cadet.</strong> We’ve have a simulation of the battleship module here for you to interact with.
+					<p><strong>Attention, Cadet.</strong> We have a simulation of the battleship module here for you to interact with.
 
 					<p>We suspect this information with this simulation should help you figure out the locations of the enemy ships.
+					<ul>
+						<li>Take the first letter and the first digit of the serial number. Add or subtract 5 to the letter or digit until it is in the range A–E or 1–5. This is the first safe location.</li>
+						<li>Do the same for the second letter and the second digit. Keep going until you run out of either letter or digits.</li>
+						<li>Finally, convert the number of ports into a letter A–E and the number of indicators plus batteries into a digit 1–5 in the same manner. This is your final safe location.</li>
+					</ul>
 					<p>Any additional information can be found in the original manual, if needed cadet.
+					<p><b>All controls are located below the simulation, read them over before using it.</b>
 					<div class="ships"></div>
 					<div class="grid"></div>
 					<button class="save-state">Save State</button>
 					<div class="save-states"></div>
+					<button class="reset-grid">Reset Grid</button>
 					<br>
-					<button class="reset">Reset</button>
+					<button class="reset" style="margin-top: 25px;">Reset</button>
+					<div style="margin-top: 25px;">Alternate Controls: <input class="alt-controls" type="checkbox"></div>
+					<br>
+					<u><b>Controls</b></u>
+					<li>Click on a tile to change it's state between empty, water and a ship.</li>
+					<li>Click and drag to place multiple of the same tile.</li>
+					<li>Click a question mark to type a number in there.</li>
+					<li>Entering ship counts will also give checkboxes to keep track of what ships are there.</li>
+					<li>Pressing grave ( ` ) also places down a 0.</li>
+					<li>Pressing backspace will move back once and spacebar moves forward once.</li>
+					<li>Use Z to undo and Y to redo.</li>
+					<br>
+					<u><b>Alternate Controls</b></u>
+					<li>Click on a tile to change it's state between empty and water.</li>
+					<li>Right-click on a tile to change it's state between empty and a ship.</li>
 				</div>
 				<div class="page-footer relative-footer">Page 1 of 1</div>
 			</div>

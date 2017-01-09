@@ -134,7 +134,7 @@
 					left: left - bsize.x + size.x
 				})
 
-				$(".north-star").css("transform", "translate(" + (left - bsize.y / 2) + "px, " + (top - size.x - bsize.x * 1.5) + "px) rotateZ(" + stencildeg + "deg) translate(0px, " + (-size.y - bsize.y) + "px)").toggle(Visible)
+				$(".north-star").css("transform", "translate(" + (left - bsize.y / 2) + "px, " + (top - size.x - bsize.x * 1.5) + "px) rotateZ(" + (deg + stencildeg) + "deg) translate(0px, " + (-size.y - bsize.y) + "px)").toggle(Visible)
 
 				for (var key in Markers) {
 					if (!Markers.hasOwnProperty(key)) continue;
@@ -685,7 +685,7 @@ indicated by the pawn’s color.</p>
 							<th>Effect</th>
 						</tr>
 						<tr>
-							<td>Click on a hexagon</td>
+							<td>Click (and hold) on a hexagon</td>
 							<td>Moves the stencil</td>
 							<td>Click on a hexagon</td>
 							<td>Place a marker/pawn</td>
