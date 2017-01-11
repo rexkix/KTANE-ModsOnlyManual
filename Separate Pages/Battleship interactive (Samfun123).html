@@ -17,6 +17,7 @@
 					controls = false
 				} else {
 					$(".alt-controls").prop("checked", controls == "true")
+					controls = (controls == "true")
 				}
 
 				var grid = $(".grid")
@@ -429,7 +430,9 @@
 				})
 
 				$("input.alt-controls").click(function() {
+					console.log(controls)
 					controls = $(this).prop("checked")
+					console.log(controls)
 					localStorage.setItem("alt-controls", controls.toString())
 				})
 
