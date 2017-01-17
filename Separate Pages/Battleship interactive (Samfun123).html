@@ -30,12 +30,14 @@
 				var currentState
 				var animTime
 				var dragState
+				var lastSelected
 
 				function mod(x, m) {
 					return (x % m + m) % m
 				}
 
 				function deselectCell(cell) {
+					lastSelected = cell
 					cell.removeClass("selected").css("animation-delay", "")
 				}
 
@@ -155,6 +157,17 @@
 				$(document).keydown(function(event) {
 					var n = parseInt(event.key)
 					var selected = $(".cell.selected")
+					
+					if (selected.length == 0 && n) {
+						if (lastSelected && lastSelected.length > 0) {
+							lastSelected.click()
+						} else {
+							order[0].click()
+						}
+
+						selected = $(".cell.selected")
+					}
+
 					var index = -1
 					order.forEach(function(e, i) {
 						if (e.is(selected)) {
@@ -427,12 +440,12 @@
 					})
 
 					$("input.tracker").remove()
+
+					lastSelected = null
 				})
 
 				$("input.alt-controls").click(function() {
-					console.log(controls)
 					controls = $(this).prop("checked")
-					console.log(controls)
 					localStorage.setItem("alt-controls", controls.toString())
 				})
 
