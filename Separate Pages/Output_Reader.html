@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<head>
+	<title>KTANE Output Log Reader</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Special+Elite" rel="stylesheet" type="text/css">
+	<script type="text/javascript">
+		$(function() {
+			var upload = $(".upload-log")
+			$(document).on("dragover", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				upload.addClass("hovering")
+			})
+
+			$(document).on("dragleave", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				upload.removeClass("hovering")
+			})
+
+			function makeTree(tree, parent) {
+				tree.forEach(function(node) {
+					var textnode = (typeof(node) == "string")
+					var elem = $("<li>").appendTo(parent)
+					var bullet = $("<span>").addClass("bullet").text("•").appendTo(elem)
+					if (textnode) {
+						$("<span>").addClass("label").html(node).appendTo(elem)
+					} else if (node[1].length > 0) {
+						bullet.text("+").click(function(argument) {
+							nodes.toggleClass("hidden")
+							text.toggleClass("expanded")
+							bullet.toggleClass("expanded")
+						})
+						var text = $("<span>").addClass("label").html(node[0]).click(function() {
+							nodes.toggleClass("hidden")
+							text.toggleClass("expanded")
+							bullet.toggleClass("expanded")
+						})
+
+						text.appendTo(elem)
+
+						elem.addClass("expandable")
+						var nodes = $("<ul>").addClass("hidden").appendTo(elem)
+						makeTree(node[1], nodes)
+					}
+				})
+			}
+
+			var PortNames = {
+				0: "Empty Port Plate",
+				RJ45: "RJ-45",
+				PS2: "PS/2",
+				StereoRCA: "Stereo RCA",
+				DVI: "DVI-D"
+			}
+
+			var ModuleNames = {
+				monsplodeFight: "Monsplode, Fight!",
+				monsplodeWho: "Who's That Monsplode?",
+				graphModule: "Connection Check",
+				CryptModule: "Cryptography",
+				shapeshift: "Shape Shift",
+				http: "HTTP Response",
+
+				ButtonV2: "Square Button",
+				PasswordV2: "Safety Safe",
+				MemoryV2: "Forget Me Not",
+				MazeV2: "Plumbing",
+				KeypadV2: "Round Keypad",
+				MorseV2: "Morsematics",
+				SimonV2: "Simon States",
+				NeedyKnobV2: "Rotary Phone",
+				NeedyVentV2: "Answering Questions",
+			}
+
+			function convertID(id) {
+				return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^spwiz/i, "").replace(/(?!^)([A-Z])/g, " $1")
+			}
+
+			// http://stackoverflow.com/a/1267338
+			function zeroFill(number, width)
+			{
+				width -= number.toString().length;
+				if ( width > 0 )
+				{
+					return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+				}
+				return number + ""; // always return a string
+			}
+
+			function formatTime(seconds) {
+				var date = new Date(seconds * 1000)
+
+				return zeroFill(date.getUTCMinutes(), 2) + ":" + zeroFill(date.getUTCSeconds(), 2) + "." + zeroFill(date.getUTCMilliseconds(), 2).substring(0, 2)
+			}
+
+			function BombGroup(total) {
+				this.Bombs = []
+				this.TotalBombs = total
+				this.State = "Unsolved"
+				this.Solved = 0
+				this.Tree = function() {
+					var serials = []
+					var bombs = []
+					var modules = []
+					this.Bombs.forEach(function(bomb) {
+						serials.push(bomb.Serial)
+						bombs.push(bomb.Tree(true))
+						Object.keys(bomb.Modules).forEach(function(name) {
+							var info = bomb.Modules[name]
+							var display = ModuleNames[name] || convertID(name)
+							if (info.length > 0) {
+								modules.push([display, info])
+							} else {
+								modules.push(display)
+							}
+						})
+					})
+
+					return ["Multibomb (" + serials.join(", ") + ")", [
+							["Bombs", bombs],
+							["Modules", modules]
+						]
+					]
+				}
+				this.GetModule = function(name) {
+					var mod
+					this.Bombs.forEach(function(bomb) {
+						mod = (mod || bomb.GetModule(name))
+					})
+
+					return mod
+				}
+				this.SimplifyModuleData = function() {
+					this.Bombs.forEach(function(bomb) {
+						bomb.SimplifyModuleData()
+					})
+				}
+			}
+			
+			function Bomb(seed) {
+				this.Seed = seed
+				this.Time = 0
+				this.TimeLeft = 0
+				this.Strikes = 0
+				this.TotalStrikes = 0
+				this.Modules = []
+				this.TotalModules = 0
+				this.Solved = 0
+				this.Indicators = []
+				this.Batteries = 0
+				this.Holders = 0
+				this.ModdedWidgets = 0
+				this.Ports = {}
+				this.Serial = ""
+				this.State = "Unsolved"
+				this.Tree = function(limited) {
+					var ports = this.Ports
+					var moduleinfo = this.Modules
+					var portlist = []
+					var ind = this.Indicators
+					var modules = ["Modules", []]
+
+					if (Object.keys(ports).length == 0) {
+						portlist = ["None"]
+					} else {
+						Object.keys(ports).forEach(function(port) {
+							portlist.push((PortNames[port] || port) + (ports[port] > 1 ? (" × " + ports[port]) : ""))
+						})
+					}
+
+					if (this.Indicators.length == 0) {
+						ind = ["None"]
+					}
+
+					var tree = ["Bomb (" + this.Serial + ")", [
+							"Serial: " + this.Serial,
+							"Batteries: " + this.Batteries,
+							"Holders: " + this.Holders,
+							"Ports: " + portlist.join(", "),
+							"Indicators: " + ind.join(", "),
+							"State: " + this.State,
+							"Strikes: " + this.Strikes + "/" + this.TotalStrikes,
+							"Total Time:  " + formatTime(this.Time),
+							"Time Left: ~" + formatTime(this.TimeLeft),
+							modules,
+							//"Seed: " + this.Seed,
+						]
+					]
+
+					if (this.ModdedWigets > 0) {
+						tree[1].push("Two Factors: " + this.ModdedWidgets)
+					}
+
+					Object.keys(moduleinfo).forEach(function(name) {
+						var info = moduleinfo[name]
+						var display = ModuleNames[name] || convertID(name)
+						if (info.length > 0) {
+							modules[1].push([display, info])
+						} else {
+							modules[1].push(display)
+						}
+					})
+					modules[0] = "Modules (" + this.Solved + "/" + this.TotalModules + ")"
+
+					if (limited) {
+						return ["Bomb (" + this.Serial + ")", [
+								"Serial: " + this.Serial,
+								"Batteries: " + this.Batteries,
+								"Holders: " + this.Holders,
+								"Ports:" + portlist.join(", "),
+								"Indicators: " + ind.join(", "),
+								//"Seed: " + this.Seed,
+							]
+						]
+					}
+
+					return tree
+				},
+				this.GetModule = function(name) {
+					return this.Modules[name]
+				}
+				this.SimplifyModuleData = function() {
+					for(m in this.Modules) {
+						if(this.Modules[m].length == 1) {
+							this.Modules[m] = this.Modules[m][0][1]
+						}
+					}
+				}
+			}
+
+			function parseLog(log) {
+				$(".tree").text("")
+
+				var tree = []
+				var bombgroup
+				var bomb
+				var parsed = []
+				var module
+
+				function GetBomb() {
+					return bombgroup || bomb
+				}
+
+				function monospace(line) {
+					return "<span class=\"monospaced\">" + line + "</span>"
+				}
+
+				function ReadDirectly(line, name, id = "General Data") {
+					var module = GetBomb().GetModule(name)
+					for (arr in module) {
+						if(module[arr][0] == ""+id) {
+							module[arr][1].push(line)
+							return
+						}
+					}
+					module.push([""+id, [line]])
+				}
+
+				var lines = log.split("\n")
+				var linen = 0
+
+				function readLine(monospaced) {
+					linen++
+					console.log(lines[linen])
+					return monospaced ? monospace(lines[linen]) : lines[linen]
+				}
+
+				function readSub(start) {
+					return readLine().substring(start)
+				}
+
+				var outputs = {
+					"BombGenerator": {
+						"Generating bomb with seed (\\d+)": function(matches) {
+							bomb = new Bomb(parseInt(matches[1]))
+							if (bombgroup && bombgroup.Bombs.length == bombgroup.TotalBombs) {
+								bombgroup = undefined
+							}
+
+							if (bombgroup) {
+								bombgroup.Bombs.push(bomb)
+							} else {
+								parsed.push(bomb)
+							}
+						},
+						"Generator settings: Time: (\\d+), NumStrikes: (\\d+)": function(matches) {
+							bomb.Time = parseInt(matches[1])
+							bomb.TimeLeft = bomb.Time
+							bomb.TotalStrikes = parseInt(matches[2])
+						},
+						"Selected ([A-z0-9]+)": function(matches) {
+							bomb.Modules[matches[1]] = []
+							bomb.TotalModules++
+						}
+					},
+					"IndicatorWidget": {
+						"Randomizing Indicator Widget: (unlit|lit) ([A-Z]{3})": function(matches) {
+							bomb.Indicators.push(matches[1] + " " + matches[2])
+						}
+					},
+					"BatteryWidget": {
+						"Randomizing Battery Widget: (\\d)": function(matches) {
+							bomb.Batteries += parseInt(matches[1])
+							bomb.Holders++
+						}
+					},
+					"PortWidget": {
+						"Randomizing Port Widget: (.+)": function(matches) {
+							matches[1].split(", ").forEach(function(port) {
+								if (!bomb.Ports[port]) {
+									bomb.Ports[port] = 0
+								}
+
+								bomb.Ports[port]++
+							})
+						}
+					},
+					"SerialNumber": {
+						"Randomizing Serial Number: ([A-Z0-9]{6})": function(matches) {
+							bomb.Serial = matches[1]
+						}
+					},
+					"WidgetGenerator": {
+						"Added widget: (.+) at" : function(matches) {
+							if (matches[1] == "ModWidget") {
+								bomb.ModdedWidgets++
+							}
+						}
+					},
+					"Bomb": {
+						"Strike! (\\d+) / \\d+ strikes": function(matches) {
+							if (!bombgroup) {
+								bomb.Strikes = parseInt(matches[1])
+
+								if (bomb.Strikes == bomb.TotalStrikes) {
+									bomb.State = "Exploded (Strikes)"
+								}
+							}
+						},
+						"Boom": function(matches) {
+							if (GetBomb().State == "Unsolved") {
+								GetBomb().State = "Exploded"
+
+								if (!bombgroup && bomb.Strikes != bomb.TotalStrikes) {
+									bomb.State = "Exploded (Time Ran Out?)"
+									bomb.TimeLeft = 0
+								}
+							}
+						},
+						"A winner is you!!": function(matches) {
+							GetBomb().State = "Solved"
+						}
+					},
+					"BombComponent": {
+						"Pass": function(matches) {
+							GetBomb().Solved++
+						}
+					},
+					"Assets.Scripts.Pacing.PaceMaker": {
+						"PlayerSuccessRating: .+ \\(Factors: solved: (.+), strikes: (.+), time: (.+)\\)": function(matches) {
+							if (!bombgroup) {
+								//bomb.Solved = Math.min(parseFloat(matches[1]) * (bomb.Modules.length + 1), bomb.Modules.length)
+								//bomb.Strikes = (parseFloat(matches[2]) / 0.3) * bomb.TotalStrikes
+								bomb.TimeLeft = (parseFloat(matches[3]) / 0.2) * bomb.Time
+
+								if (bomb.TimeLeft == 0) {
+									bomb.State = "Exploded (Time Ran Out)"
+								}
+							}
+						}
+					},
+
+					// Multiple Bombs
+					"MultipleBombs": {
+						"Bombs to spawn: (\\d+)": function(matches) {
+							if (matches[1] != "1") {
+								bombgroup = new BombGroup(parseInt(matches[1]))
+								bombgroup.Bombs.push(bomb)
+								parsed.splice(parsed.length - 1, 1)
+								parsed.push(bombgroup)
+							}
+						}
+					},
+
+					// Modules
+					"Light Cycle": {
+						"Start sequence: ([A-Z]{6})": function(matches) {
+							module = GetBomb().GetModule("LightCycleModule")
+							module = ["Starting Seq: " + matches[1]]
+						},
+						"SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})": function(matches) {
+							module.push("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3])
+						}
+					},
+					"Mystic Square": {
+						"Field:": function(matches) {
+							ReadDirectly(matches[0], "MysticSquareModule")
+							for (var i = 0; i < 3; i++) {
+								ReadDirectly(readLine(true), "MysticSquareModule")
+							}
+						},
+						"Last serial digit": "MysticSquareModule",
+						"Skull path": "MysticSquareModule"
+					},
+					"Battleship": {
+						".+": "BattleshipModule",
+						"Ships: .+": function(matches) {
+							for (var i = 0; i < 6; i++) {
+								ReadDirectly(readLine(true), "BattleshipModule")
+							}
+						}
+					},
+					"ColoredSquares": {
+						"First stage color is (.+); count=(\\d+).": function(matches) {
+							ReadDirectly("First stage is: " + matches[1] + ". Count: " + matches[2], "ColoredSquaresModule")
+						}
+					},
+					"BrokenButtonModule": {
+						".+": "brokenButtons",
+						"Buttons:": function(matches) {
+							for (var i = 0; i < 4; i++) {
+								ReadDirectly(readLine(), "brokenButtons")
+							}
+						}
+					},
+					"Bitmaps": {
+						"Top left=(\\d+), top right=(\\d+), bottom left=(\\d+), bottom right=(\\d+), serial=.+, batteries=\\d+, button to push=(\\d)": function(matches) {
+							ReadDirectly("Top-Left: " + matches[1] + ", Top-Right: " + matches[2], "BitmapsModule")
+							ReadDirectly("Bottom-Left: " + matches[3] + ", Bottom-Right: " + matches[4], "BitmapsModule")
+							ReadDirectly("Solution: " + matches[5], "BitmapsModule")
+						}
+					},
+					"TheBulb": {
+						"Initial state: Color=(.+), Opaque=(True|False), Initially on=(True|False)": function(matches) {
+							ReadDirectly("Color: " + matches[1], "TheBulbModule")
+							ReadDirectly("Visiblity: " + (matches[2] == "True" ? "Opaque" : "See-Through"), "TheBulbModule")
+							ReadDirectly("Initially: " + (matches[3] == "True" ? "On" : "Off"), "TheBulbModule")
+						}
+					},
+					"Friendship": {
+						"Friendship symbols:": function(matches) {
+							var symbols = []
+							for (var i = 0; i < 6; i++) {
+								var match = new RegExp("Pony=(.+) ").exec(readLine())
+								if (match) {
+									symbols.push(match[1])
+								}
+							}
+							ReadDirectly("Symbols: " + symbols.join(", ") ,"FriendshipModule")
+						},
+						"Disregard .+": "FriendshipModule",
+						"The potential Elements of Harmony are:": "FriendshipModule",
+						"Showing Elements of Harmony:": function(matches) {
+							var elems = []
+							for (var i = 0; i < 7; i++) {
+								elems.push(readLine())
+							}
+							ReadDirectly("Elements: " + elems.join(", "), "FriendshipModule")
+							ReadDirectly("Correct Element: " + new RegExp("of which (.+) is correct").exec(readLine())[1], "FriendshipModule")
+						},
+						"You selected": "FriendshipModule"
+					},
+					"AdjacentLetters": {
+						"Letters:": function() {
+							var line = "Initial Letters:"
+							for (var i = 0; i < 3; i++) {
+								line += "<br>" + readLine(true)
+							}
+
+							ReadDirectly(line, "AdjacentLettersModule")
+						}
+					},
+					"SkewedModule": {
+						"Rule Log": function() {
+							ReadDirectly(readLine(), "skewedSlots") // Initial
+							module = GetBomb().GetModule("skewedSlots")
+
+							for (var i = 0; i < 3; i++) {
+								readLine()
+								var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine())
+								var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []]
+
+								var line = readLine()
+								while (!(/Final digit/).exec(line)) {
+									slot[1].push(line)
+									line = readLine()
+								}
+								slot[1].push(line)
+
+								module[0][1].push(slot)
+							}
+
+							readLine()
+							ReadDirectly(readLine(), "skewedSlots") // Final
+						}
+					},
+					"Coordinates": {
+						"List of numbers:": "CoordinatesModule",
+						"Showing": "CoordinatesModule",
+						"Grid:": function() {
+							var line = "Grid:"
+							for (var i = 0; i < 2; i++) {
+								line += "<br>" + readLine(true)
+							}
+
+							ReadDirectly(line, "CoordinatesModule")
+						}
+					},
+					"Murder": {
+						"row": "murder",
+						"in the": "murder",
+						"to (?:remove|reduce)": "murder",
+						"Potential solutions:": "murder"
+					},
+					"TicTacToe": {
+						".+": "TicTacToeModule",
+						"Initialized|Placed": function(matches) {
+							for (var i = 0; i < 5; i++) {
+								ReadDirectly(readLine(true), "TicTacToeModule")
+							}
+						}
+					},
+					"Word Search": {
+						"Correct word is (.+)": function(matches) {
+							ReadDirectly("Solution: " + matches[1], "WordSearchModule")
+						},
+						"Wrong words are (.+)": function(matches) {
+							ReadDirectly("Wrong Words: " + matches[1], "WordSearchModule")
+						},
+						"Final field:": function(matches) {
+							ReadDirectly(matches[0], "WordSearchModule")
+							for (var i = 0; i < 6; i++) {
+								ReadDirectly(readLine(true), "WordSearchModule")
+							}
+						}
+					},
+					"Simon Screams": {
+						".+": "SimonScreamsModule",
+						"Started. (.+)": function(matches) {
+							for (var i = 0; i < 5; i++) {
+								ReadDirectly(readLine(), "SimonScreamsModule")
+							}
+						},
+						"Activated": function(matches) {
+							for (var i = 0; i < 3; i++) {
+								ReadDirectly(readLine(), "SimonScreamsModule")
+							}
+						}
+					},
+					"Rock-Paper-Scissors-Lizard-Spock": {
+						"wins on account": "RockPaperScissorsLizardSpockModule",
+						"Must press:": "RockPaperScissorsLizardSpockModule"
+					},
+					"FollowTheLeader": {
+						".+": "FollowTheLeaderModule",
+						"Wire state:": function() {
+							var line = readLine()
+							while ((/^Wire \d+-to-\d+/).exec(line)) {
+								ReadDirectly(line, "FollowTheLeaderModule")
+								line = readLine()
+							}
+							linen--
+						},
+						"Expectation": function() {
+							var line = readLine()
+							while ((/^Wire \d+-to-\d+/).exec(line)) {
+								ReadDirectly(line, "FollowTheLeaderModule")
+								line = readLine()
+							}
+							linen--
+						}
+					},
+					"Plumbing": {
+						".+": function(matches, id) {
+							trim = ("[Plumbing #"+id+"] ").length
+							module = GetBomb().GetModule("MazeV2")
+							data = []
+							data[0] = ["RED IN", [matches[0], readSub(trim), readSub(trim), readSub(trim), readSub(trim)]]
+							data[1] = ["YELLOW IN", [readSub(trim), readSub(trim), readSub(trim), readSub(trim), readSub(trim)]]
+							data[2] = ["GREEN IN", [readSub(trim), readSub(trim), readSub(trim), readSub(trim), readSub(trim)]]
+							line = readSub(trim)
+							if(line == "BLUE IN is active by default") data[3] = ["BLUE IN", [line]]
+							else data[3] = ["BLUE IN", [line, readSub(trim), readSub(trim), readSub(trim), readSub(trim)]]
+							data[4] = ["RED OUT", [readSub(trim), readSub(trim), readSub(trim), readSub(trim), readSub(trim)]]
+							data[5] = ["YELLOW OUT", [readSub(trim), readSub(trim), readSub(trim), readSub(trim), readSub(trim)]]
+							data[6] = ["GREEN OUT", [readSub(trim), readSub(trim), readSub(trim), readSub(trim), readSub(trim)]]
+							line = readSub(trim)
+							if(line == "BLUE OUT is active by default") data[7] = ["BLUE OUT", [line]]
+							else data[7] = ["BLUE OUT", [line, readSub(trim), readSub(trim), readSub(trim), readSub(trim)]]
+							data[8] = ["DISPLAY",
+									  [readSub(trim),
+									   readSub(trim), readSub(trim), readSub(trim),
+									   readSub(trim), readSub(trim), readSub(trim)]]
+							readLine()
+							data[9] = ["SOLUTION",
+									  [readSub(trim),
+									   readSub(trim), readSub(trim), readSub(trim),
+									   readSub(trim), readSub(trim), readSub(trim)]]
+							module.push(["#"+(parseInt(id) + 1), data])
+						}
+					},
+					"Morsematics": {
+						".+": function(matches, id) {
+							module = GetBomb().GetModule("MorseV2")
+							var id = parseInt(id)
+							
+							if (!module[id]) {
+								module.push(["#" + (parseInt(id) + 1), []])
+							}
+
+							module[id][1].push(matches[0])
+						}
+					},
+
+					// Read logging directly
+					"Wire Placement": {
+						".+": "WirePlacementModule"
+					},
+					"Text Field": {
+						".+": "TextField"
+					},
+					"Hexamaze": {
+						".+": "HexamazeModule"
+					},
+					"GamepadModule": {
+						".+": "theGamepad"
+					},
+					"Double-Oh": {
+						".+": "DoubleOhModule"
+					},
+					"Laundry": {
+						".+": "Laundry"
+					},
+					"Blind Alley": {
+						".+": "BlindAlleyModule"
+					},
+					"Mouse in the Maze": {
+						".+": "MouseInTheMaze"
+					},
+				}
+
+				while (linen < lines.length) {
+					var line = lines[linen]
+					if (line != "") {
+						var match = /\[(.+?)\] ?(.+)/.exec(line)
+						if (match) {
+							var obj = undefined
+							var id = undefined
+							var submatch = /(.+?) #(\d+)/.exec(match[1])
+							if (submatch) {
+								obj = outputs[submatch[1]]
+								id = submatch[2]
+							}
+							else obj = outputs[match[1]]
+							if (obj) {
+								Object.keys(obj).forEach(function(regex) {
+									var func = obj[regex]
+									var matches = new RegExp(regex).exec(match[2])
+									if (matches) {
+										if (typeof(func) == "function") {
+											func(matches, id)
+										} else {
+											ReadDirectly(match[2], func, id)
+										}
+									}
+								})
+							}
+						}
+					}
+
+					linen++
+				}
+
+				parsed.forEach(function(obj) {
+					obj.SimplifyModuleData()
+					tree.push(obj.Tree())
+				})
+
+				makeTree(tree, $(".tree"))
+			}
+
+			function uploadFiles(files) {
+				if (files.length == 1) {
+					fr = new FileReader()
+					fr.onload = function() {
+						upload.removeClass("hovering")
+						var result = fr.result
+						if (result.match("Keep Talking and Nobody Explodes")) {
+							parseLog(result)
+						}
+					}
+					fr.readAsText(files[0])
+				} else {
+					upload.removeClass("hovering")
+				}
+			}
+
+			$("#log").change(function() {
+				uploadFiles(this.files)
+			})
+
+			$(document).on("drop", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				
+				uploadFiles(event.originalEvent.dataTransfer.files)
+			})
+		})
+	</script>
+	<style type="text/css">
+		* {
+			margin: 0;
+			font-family: "Special Elite";
+			font-size: 16px
+		}
+
+		.main-body {
+			margin: 5px;
+			display: flex;
+			/*align-items: center;*/
+			flex-direction: column;
+		}
+
+		#log {
+			display: none;
+		}
+
+		.title {
+			margin: 20px;
+			margin-bottom: 0px;
+			font-size: 35px;
+		}
+
+		.upload-button {
+			margin: 20px;
+			padding: 20px;
+			font-size: 20px;
+			color: white;
+			background-color: rgb(240, 0, 0);;
+			transition: 0.5s;
+			cursor: pointer;
+			user-select: none;
+			border-radius: 3px;
+			width: 25vw;
+		}
+
+		.inst-text {
+			margin-left: 70px;
+			margin-bottom: 30px;
+		}
+
+		.upload-button:hover {
+			background-color: rgb(230, 0, 0);
+			box-shadow: -3px 3px 10px 0px rgba(0,0,0,0.73)
+		}
+
+		.upload-log {
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			background-color: rgba(0, 0, 0, 0);
+			display: flex;
+			justify-content: center;
+			pointer-events: none;
+			top: 0px;
+			left: 0px;
+		}
+
+		.upload-log span {
+			color: rgba(0, 0, 0, 0);
+			font-size: 15vmin;
+			align-self: center;
+			user-select: none;
+		}
+
+		.upload-log, .upload-log span {
+			transition: 0.1s;
+		}
+
+		.upload-log.hovering {
+			background-color: rgba(0, 0, 0, 0.5);
+		 }
+
+		.upload-log.hovering span {
+			color: rgba(255, 255, 255, 1);
+		}
+
+		ul.hidden {
+			display: none;
+		}
+
+		ul {
+			list-style: none;
+		}
+
+		li.expandable > span.label {
+			text-decoration: underline;
+		}
+
+		li.expandable > span.label.expanded {
+			text-decoration: none;
+		}
+
+		li span.label {
+			margin-left: 10px;
+		}
+
+		.bullet {
+			margin-right: 5px;
+			position: absolute;
+			transition: 0.5s;
+		}
+
+		.bullet.expanded {
+			transform: translateX(-1.5px) rotateZ(45deg);
+		}
+
+		.monospaced {
+			font-family: monospace;
+			font-size: 18px;
+		}
+	</style>
+</head>
+<body>
+	<div class="upload-log"><span>Drop here!</span></div>
+	<div class="main-body">
+		<input type="file" id="log">
+		<div class="title">KTANE Output Log Reader</div>
+		<label for="log"><div class="upload-button">Select Output Log</div></label>
+		<div class="inst-text">or drop it here.</div>
+		<ul class="tree"></ul>
+	</div>
+</body>
